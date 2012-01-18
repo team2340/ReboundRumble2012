@@ -83,23 +83,24 @@ public class LogitechF310 {
     }
 
     public Direction getDPad() {
-        return new Direction(limit(joystick.getRawAxis(1)),
-                limit(joystick.getRawAxis(2)));
+        return new Direction(limit(joystick.getRawAxis(5)),
+                (-1 * limit(joystick.getRawAxis(6))));
 
     }
 
     public Direction getLeftStick() {
-        return new Direction(limit(joystick.getRawAxis(5)),
-                limit(joystick.getRawAxis(6)));
+        return new Direction(limit(joystick.getRawAxis(1)),
+                (-1 * limit(joystick.getRawAxis(2))));
     }
 
     public Direction getRightStick() {
         return new Direction(limit(joystick.getRawAxis(3)),
-                limit(joystick.getRawAxis(4)));
+                (-1 * limit(joystick.getRawAxis(4))));
     }
 
     private double limit(double value) {
-        if (value > 0.04 || value < -0.04) {
+        if ((value > 0 && value < 0.04) || 
+                (value < 0 && value > -0.04)) {
             return 0.0;
         }
         return value;
@@ -108,47 +109,39 @@ public class LogitechF310 {
     public void printState() {
         if (getX()) {
             System.out.println("F310 on " + port + " - X is pushed");
-
         }
         if (getY()) {
             System.out.println("F310 on " + port + " - Y is pushed");
-
         }
         Watchdog.getInstance().feed();
         if (getA()) {
             System.out.println("F310 on " + port + " - A is pushed");
-
         }
         if (getB()) {
             System.out.println("F310 on " + port + " - B is pushed");
-
         }
         if (getLB()) {
-            System.out.println("F310 on " + port + " - LBis pushed");
-
+            System.out.println("F310 on " + port + " - LB is pushed");
         }
         if (getRB()) {
             System.out.println("F310 on " + port + " - RB is pushed");
-
         }
         if (getLT()) {
-            System.out.println("F310 on " + port + " - RT is pushed");
-            Watchdog.getInstance().feed();
-
+            System.out.println("F310 on " + port + " - LT is pushed");
         }
+        Watchdog.getInstance().feed();
         if (getRT()) {
             System.out.println("F310 on " + port + " - RT is pushed");
-
         }
+        Watchdog.getInstance().feed();
         if (getBack()) {
             System.out.println("F310 on " + port + " - Back is pushed");
-
         }
+        Watchdog.getInstance().feed();
         if (getStart()) {
             System.out.println("F310 on " + port + " - Start is pushed");
-
         }
-
+        Watchdog.getInstance().feed();
         Direction dPadDir = getDPad();
         if (dPadDir.getX() != 0 || dPadDir.getY() != 0) {
             System.out.println("F310 on " + port + " - DPad x=" + dPadDir.getX() + ", y=" + dPadDir.getY());
@@ -156,12 +149,12 @@ public class LogitechF310 {
         Watchdog.getInstance().feed();
         Direction leftDir = getLeftStick();
         if (leftDir.getX() != 0 || leftDir.getY() != 0) {
-            System.out.println("F310 on " + port + " - DPad x=" + leftDir.getX() + ", y=" + leftDir.getY());
+            System.out.println("F310 on " + port + " - left stick x=" + leftDir.getX() + ", y=" + leftDir.getY());
         }
         Watchdog.getInstance().feed();
         Direction rightDir = getRightStick();
         if (rightDir.getX() != 0 || rightDir.getY() != 0) {
-            System.out.println("F310 on " + port + " - DPad x=" + rightDir.getX() + ", y=" + rightDir.getY());
+            System.out.println("F310 on " + port + " - right stick x=" + rightDir.getX() + ", y=" + rightDir.getY());
         }
     }
 }
