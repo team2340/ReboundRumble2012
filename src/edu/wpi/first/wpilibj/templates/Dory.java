@@ -22,6 +22,7 @@ public class Dory extends SimpleRobot {
     
     LogitechF310 controller1 = new LogitechF310(1);
     LogitechF310 controller2 = new LogitechF310(2);
+    LogitechF310 controller3 = new LogitechF310(3);
     
     /**
      * This function is called once each time the robot enters autonomous mode.
@@ -39,6 +40,7 @@ public class Dory extends SimpleRobot {
         {
             controller1.printState();
             controller2.printState();
+            controller3.printState();
         }
     }
 }
