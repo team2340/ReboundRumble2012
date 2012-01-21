@@ -18,6 +18,8 @@ import team2340.LogitechF310;
  * creating this project, you must also update the manifest file in the resource
  * directory.
  */
+
+//nate test NETBEANS push
 public class Dory extends SimpleRobot {
     
     LogitechF310 controller1 = new LogitechF310(1);
