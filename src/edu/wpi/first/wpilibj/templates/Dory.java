@@ -19,12 +19,17 @@ import team2340.LogitechF310;
  * directory.
  */
 
-//nate test NETBEANS push
+
 public class Dory extends SimpleRobot {
     
     LogitechF310 controller1 = new LogitechF310(1);
     LogitechF310 controller2 = new LogitechF310(2);
     LogitechF310 controller3 = new LogitechF310(3);
+    
+    LogitechF310 natesController = new LogitechF310(3);
+   
+    
+    LogitechF310 natesController2 = new LogitechF310(4);
     
     /**
      * This function is called once each time the robot enters autonomous mode.
