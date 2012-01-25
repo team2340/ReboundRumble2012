@@ -9,6 +9,9 @@ package edu.wpi.first.wpilibj.templates;
 
 
 import edu.wpi.first.wpilibj.SimpleRobot;
+import edu.wpi.first.wpilibj.camera.AxisCamera;
+import edu.wpi.first.wpilibj.camera.AxisCameraException;
+import edu.wpi.first.wpilibj.image.*;
 import team2340.LogitechF310;
 
 /**
@@ -43,11 +46,43 @@ public class Dory extends SimpleRobot {
      */
     public void operatorControl() {
 
+        AxisCamera camera = AxisCamera.getInstance("10.23.40.11");
+        
         while(isEnabled() && isOperatorControl())
         {
-            controller1.printState();
-            controller2.printState();
-            controller3.printState();
+            if(camera.freshImage()) 
+            {
+                try {
+                    ColorImage color = camera.getImage();
+                    BinaryImage binary = color.thresholdHSL(0, 255, 0, 255, 230, 255);
+                    color.free();
+                    BinaryImage hulled = binary.convexHull(true);
+                    binary.free();
+                    CriteriaCollection cc = new CriteriaCollection();
+                    cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_AREA_BY_IMAGE_AREA, 6.0f, 7.0f, true);
+                    cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_RATIO_OF_EQUIVALENT_RECT_SIDES, 1.0f, 1.1f, true);
+                    BinaryImage filtered = hulled.particleFilter(cc);
+                    hulled.free();
+                    ParticleAnalysisReport[] reports = filtered.getOrderedParticleAnalysisReports();
+                    filtered.free();
+                    float idealRatio = 24.0f / 18.0f;
+                    for(int i = 0; i < reports.length; ++i) {
+                        ParticleAnalysisReport report = reports[i];
+                        float width = report.boundingRectWidth;
+                        float height = report.boundingRectHeight;
+                        float ratio = width / height;
+                        if(((ratio + 0.1f) < idealRatio) &&
+                                ((ratio - 0.1f) > idealRatio)) {
+                            System.out.println("found one");
+                        }
+                    }
+                    
+                } catch (AxisCameraException ex) {
+                    ex.printStackTrace();
+                } catch (NIVisionException ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
     }
 }
