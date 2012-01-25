@@ -27,6 +27,9 @@ public class Dory extends SimpleRobot {
     LogitechF310 controller3 = new LogitechF310(3);
     
     LogitechF310 natesController = new LogitechF310(3);
+   
+    
+    LogitechF310 natesController2 = new LogitechF310(4);
     
     /**
      * This function is called once each time the robot enters autonomous mode.
