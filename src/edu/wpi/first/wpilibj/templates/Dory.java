@@ -60,12 +60,13 @@ public class Dory extends SimpleRobot {
                     binary.free();
                     CriteriaCollection cc = new CriteriaCollection();
                     cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_AREA_BY_IMAGE_AREA, 6.0f, 7.0f, true);
-                    cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_RATIO_OF_EQUIVALENT_RECT_SIDES, 1.0f, 1.1f, true);
+                    cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_RATIO_OF_EQUIVALENT_RECT_SIDES, 0f, 1.1f, true);
                     BinaryImage filtered = hulled.particleFilter(cc);
                     hulled.free();
                     ParticleAnalysisReport[] reports = filtered.getOrderedParticleAnalysisReports();
                     filtered.free();
                     float idealRatio = 24.0f / 18.0f;
+                    System.out.println("found " + reports.length + " shapes");
                     for(int i = 0; i < reports.length; ++i) {
                         ParticleAnalysisReport report = reports[i];
                         float width = report.boundingRectWidth;
