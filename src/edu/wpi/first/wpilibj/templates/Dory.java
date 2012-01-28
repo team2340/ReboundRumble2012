@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.SimpleRobot;
 import edu.wpi.first.wpilibj.camera.AxisCamera;
 import edu.wpi.first.wpilibj.camera.AxisCameraException;
 import edu.wpi.first.wpilibj.image.*;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import team2340.LogitechF310;
 
 /**
@@ -58,6 +59,7 @@ public class Dory extends SimpleRobot {
                     color.free();
                     BinaryImage hulled = binary.convexHull(true);
                     binary.free();
+                    SmartDashboard.putInt(ERRORS_TO_DRIVERSTATION_PROP, ROBOT_TASK_PRIORITY);
                     CriteriaCollection cc = new CriteriaCollection();
                     cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_AREA_BY_IMAGE_AREA, 6.0f, 7.0f, true);
                     cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_RATIO_OF_EQUIVALENT_RECT_SIDES, 0f, 1.1f, true);
@@ -66,6 +68,7 @@ public class Dory extends SimpleRobot {
                     ParticleAnalysisReport[] reports = filtered.getOrderedParticleAnalysisReports();
                     filtered.free();
                     float idealRatio = 24.0f / 18.0f;
+                    
                     System.out.println("found " + reports.length + " shapes");
                     for(int i = 0; i < reports.length; ++i) {
                         ParticleAnalysisReport report = reports[i];
