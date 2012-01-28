@@ -46,9 +46,16 @@ public class Dory extends SimpleRobot {
         AxisCamera.ResolutionT res = camera.getResolution();
         double xRes = res.width;
         double fovAngleInRad = (24.5 * Math.PI) / 180.0;
+        SmartDashboard.putInt("Hue Low", 0);
+        SmartDashboard.putInt("Hue High", 255);
+        SmartDashboard.putInt("Sat Low", 0);
+        SmartDashboard.putInt("Sat High", 255);
+        SmartDashboard.putInt("Intensity Low", 0);
+        SmartDashboard.putInt ("Intensity High", 255);
         while(isEnabled() && isOperatorControl())
         {
-            if(camera.freshImage()) 
+           
+           if(camera.freshImage()) 
             {
                 try {
                     ColorImage color = camera.getImage();
@@ -58,6 +65,7 @@ public class Dory extends SimpleRobot {
                     int satHigh = SmartDashboard.getInt("Sat High", 255);
                     int intensityLow = SmartDashboard.getInt("Intensity Low", 0);
                     int intensityHigh = SmartDashboard.getInt("Intensity High", 255);
+                    System.out.println(hueLow+ ", " +hueHigh+ ", " +satLow+ ", " +satHigh+ ", " +intensityLow+ "," +intensityHigh);
                     BinaryImage binary = color.thresholdHSI(hueLow, hueHigh, satLow, satHigh, intensityLow, intensityHigh);
                     color.free();
                     BinaryImage hulled = binary.convexHull(true);
@@ -77,12 +85,12 @@ public class Dory extends SimpleRobot {
                         float width = report.boundingRectWidth;
                         float height = report.boundingRectHeight;
                         float ratio = width / height;
-                        if(((ratio + 0.1f) < idealRatio) &&
-                                ((ratio - 0.1f) > idealRatio)) {
-                            System.out.println("found one");
+                        System.out.println("ratio = " + ratio);
+                        if(((ratio < (idealRatio + 0.2)) &&
+                                (ratio > (idealRatio - 0.2)))) {
                             double fovFT = (2.0 / width) / xRes;
                             double distFromTarget = (fovFT / 2.0) / Math.tan(fovAngleInRad);
-                            System.out.println("dist from target" + distFromTarget);
+                            System.out.println("dist from target = " + distFromTarget);
                         }
                     }
                     
