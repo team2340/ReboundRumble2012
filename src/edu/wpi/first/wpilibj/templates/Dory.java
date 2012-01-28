@@ -30,11 +30,6 @@ public class Dory extends SimpleRobot {
     LogitechF310 controller2 = new LogitechF310(2);
     LogitechF310 controller3 = new LogitechF310(3);
     
-    LogitechF310 natesController = new LogitechF310(3);
-   
-    
-    LogitechF310 natesController2 = new LogitechF310(4);
-    
     /**
      * This function is called once each time the robot enters autonomous mode.
      */
@@ -48,18 +43,25 @@ public class Dory extends SimpleRobot {
     public void operatorControl() {
 
         AxisCamera camera = AxisCamera.getInstance("10.23.40.11");
-        
+        AxisCamera.ResolutionT res = camera.getResolution();
+        double xRes = res.width;
+        double fovAngleInRad = (24.5 * Math.PI) / 180.0;
         while(isEnabled() && isOperatorControl())
         {
             if(camera.freshImage()) 
             {
                 try {
                     ColorImage color = camera.getImage();
-                    BinaryImage binary = color.thresholdHSL(0, 255, 0, 255, 230, 255);
+                    int hueLow = SmartDashboard.getInt("Hue Low", 0);
+                    int hueHigh = SmartDashboard.getInt("Hue High", 255);
+                    int satLow = SmartDashboard.getInt("Sat Low", 0);
+                    int satHigh = SmartDashboard.getInt("Sat High", 255);
+                    int intensityLow = SmartDashboard.getInt("Intensity Low", 0);
+                    int intensityHigh = SmartDashboard.getInt("Intensity High", 255);
+                    BinaryImage binary = color.thresholdHSI(hueLow, hueHigh, satLow, satHigh, intensityLow, intensityHigh);
                     color.free();
                     BinaryImage hulled = binary.convexHull(true);
                     binary.free();
-                    SmartDashboard.putInt(ERRORS_TO_DRIVERSTATION_PROP, ROBOT_TASK_PRIORITY);
                     CriteriaCollection cc = new CriteriaCollection();
                     cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_AREA_BY_IMAGE_AREA, 6.0f, 7.0f, true);
                     cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_RATIO_OF_EQUIVALENT_RECT_SIDES, 0f, 1.1f, true);
@@ -78,8 +80,12 @@ public class Dory extends SimpleRobot {
                         if(((ratio + 0.1f) < idealRatio) &&
                                 ((ratio - 0.1f) > idealRatio)) {
                             System.out.println("found one");
+                            double fovFT = (2.0 / width) / xRes;
+                            double distFromTarget = (fovFT / 2.0) / Math.tan(fovAngleInRad);
+                            System.out.println("dist from target" + distFromTarget);
                         }
                     }
+                    
                     
                 } catch (AxisCameraException ex) {
                     ex.printStackTrace();
