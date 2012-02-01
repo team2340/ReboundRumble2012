@@ -8,9 +8,12 @@
 package edu.wpi.first.wpilibj.templates;
 
 
+import edu.wpi.first.wpilibj.CANJaguar;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.SimpleRobot;
 import edu.wpi.first.wpilibj.camera.AxisCamera;
 import edu.wpi.first.wpilibj.camera.AxisCameraException;
+import edu.wpi.first.wpilibj.can.CANTimeoutException;
 import edu.wpi.first.wpilibj.image.*;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import team2340.LogitechF310;
@@ -41,66 +44,114 @@ public class Dory extends SimpleRobot {
      * This function is called once each time the robot enters operator control.
      */
     public void operatorControl() {
-
-        AxisCamera camera = AxisCamera.getInstance("10.23.40.11");
-        AxisCamera.ResolutionT res = camera.getResolution();
-        double xRes = res.width;
-        double fovAngleInRad = (24.5 * Math.PI) / 180.0;
-        SmartDashboard.putInt("Hue Low", 0);
-        SmartDashboard.putInt("Hue High", 255);
-        SmartDashboard.putInt("Sat Low", 0);
-        SmartDashboard.putInt("Sat High", 255);
-        SmartDashboard.putInt("Intensity Low", 0);
-        SmartDashboard.putInt ("Intensity High", 255);
-        while(isEnabled() && isOperatorControl())
-        {
-           
-           if(camera.freshImage()) 
-            {
-                try {
-                    ColorImage color = camera.getImage();
-                    int hueLow = SmartDashboard.getInt("Hue Low", 0);
-                    int hueHigh = SmartDashboard.getInt("Hue High", 255);
-                    int satLow = SmartDashboard.getInt("Sat Low", 0);
-                    int satHigh = SmartDashboard.getInt("Sat High", 255);
-                    int intensityLow = SmartDashboard.getInt("Intensity Low", 0);
-                    int intensityHigh = SmartDashboard.getInt("Intensity High", 255);
-                    System.out.println(hueLow+ ", " +hueHigh+ ", " +satLow+ ", " +satHigh+ ", " +intensityLow+ "," +intensityHigh);
-                    BinaryImage binary = color.thresholdHSI(hueLow, hueHigh, satLow, satHigh, intensityLow, intensityHigh);
-                    color.free();
-                    BinaryImage hulled = binary.convexHull(true);
-                    binary.free();
-                    CriteriaCollection cc = new CriteriaCollection();
-                    cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_AREA_BY_IMAGE_AREA, 6.0f, 7.0f, true);
-                    cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_RATIO_OF_EQUIVALENT_RECT_SIDES, 0f, 1.1f, true);
-                    BinaryImage filtered = hulled.particleFilter(cc);
-                    hulled.free();
-                    ParticleAnalysisReport[] reports = filtered.getOrderedParticleAnalysisReports();
-                    filtered.free();
-                    float idealRatio = 24.0f / 18.0f;
-                    
-                    System.out.println("found " + reports.length + " shapes");
-                    for(int i = 0; i < reports.length; ++i) {
-                        ParticleAnalysisReport report = reports[i];
-                        float width = report.boundingRectWidth;
-                        float height = report.boundingRectHeight;
-                        float ratio = width / height;
-                        System.out.println("ratio = " + ratio);
-                        if(((ratio < (idealRatio + 0.2)) &&
-                                (ratio > (idealRatio - 0.2)))) {
-                            double fovFT = (2.0 / width) / xRes;
-                            double distFromTarget = (fovFT / 2.0) / Math.tan(fovAngleInRad);
-                            System.out.println("dist from target = " + distFromTarget);
-                        }
-                    }
-                    
-                    
-                } catch (AxisCameraException ex) {
-                    ex.printStackTrace();
-                } catch (NIVisionException ex) {
-                    ex.printStackTrace();
-                }
-            }
+       
+            /*  AxisCamera camera = AxisCamera.getInstance("10.23.40.11");
+              AxisCamera.ResolutionT res = camera.getResolution();
+              double xRes = res.width;
+              double fovAngleInRad = (24.5 * Math.PI) / 180.0;
+              SmartDashboard.putInt("Hue Low", 0);
+              SmartDashboard.putInt("Hue High", 255);
+              SmartDashboard.putInt("Sat Low", 0);
+              SmartDashboard.putInt("Sat High", 255);
+              SmartDashboard.putInt("Intensity Low", 0);
+              SmartDashboard.putInt ("Intensity High", 255); */
+        SmartDashboard.putInt("Comtrol_Mode", 0);
+              SmartDashboard.putDouble("KPercentVbus_mode",0 );
+              while(isEnabled() && isOperatorControl())
+              {
+                 /*
+                 if(camera.freshImage()) 
+                  {
+                      try {
+                          ColorImage color = camera.getImage();
+                          int hueLow = SmartDashboard.getInt("Hue Low", 0);
+                          int hueHigh = SmartDashboard.getInt("Hue High", 255);
+                          int satLow = SmartDashboard.getInt("Sat Low", 0);
+                          int satHigh = SmartDashboard.getInt("Sat High", 255);
+                          int intensityLow = SmartDashboard.getInt("Intensity Low", 0);
+                          int intensityHigh = SmartDashboard.getInt("Intensity High", 255);
+                          System.out.println(hueLow+ ", " +hueHigh+ ", " +satLow+ ", " +satHigh+ ", " +intensityLow+ "," +intensityHigh);
+                          BinaryImage binary = color.thresholdHSI(hueLow, hueHigh, satLow, satHigh, intensityLow, intensityHigh);
+                          color.free();
+                          BinaryImage hulled = binary.convexHull(true);
+                          binary.free();
+                          CriteriaCollection cc = new CriteriaCollection();
+                          cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_AREA_BY_IMAGE_AREA, 6.0f, 7.0f, true);
+                          cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_RATIO_OF_EQUIVALENT_RECT_SIDES, 0f, 1.1f, true);
+                          BinaryImage filtered = hulled.particleFilter(cc);
+                          hulled.free();
+                          ParticleAnalysisReport[] reports = filtered.getOrderedParticleAnalysisReports();
+                          filtered.free();
+                          float idealRatio = 24.0f / 18.0f;
+                          
+                          System.out.println("found " + reports.length + " shapes");
+                          for(int i = 0; i < reports.length; ++i) {
+                              ParticleAnalysisReport report = reports[i];
+                              float width = report.boundingRectWidth;
+                              float height = report.boundingRectHeight;
+                              float ratio = width / height;
+                              System.out.println("ratio = " + ratio);
+                              if(((ratio < (idealRatio + 0.2)) &&
+                                      (ratio > (idealRatio - 0.2)))) {
+                                  double fovFT = (2.0 / width) / xRes;
+                                  double distFromTarget = (fovFT / 2.0) / Math.tan(fovAngleInRad);
+                                  System.out.println("dist from target = " + distFromTarget);
+                              }
+                          }
+                          
+                          
+                      } catch (AxisCameraException ex) {
+                          ex.printStackTrace();
+                      } catch (NIVisionException ex) {
+                          ex.printStackTrace();
+                      }
+                  }
+              } */
+               try {
+              CANJaguar motorOne = new CANJaguar(3);
+             
+              
+              int conrolMode = SmartDashboard.getInt("Comtrol_Mode", 0);
+              
+              if (conrolMode == 0)
+              {
+              motorOne.changeControlMode(CANJaguar.ControlMode.kPercentVbus);
+              System.out.println("CANJag in KPercentVBus");
+              motorOne.setX(SmartDashboard.getDouble("KPercentVbus_mode", 0));
+                      
+              }
+              else if (conrolMode == 1)
+              {
+              motorOne.changeControlMode(CANJaguar.ControlMode.kCurrent);
+              System.out.println("CANJag in KCurrent");
+              motorOne.setX(SmartDashboard.getDouble ("KCurrent_mode", 0));
+              }
+              else if (conrolMode == 2)
+              {
+                  motorOne.changeControlMode(CANJaguar.ControlMode.kSpeed);
+                  System.out.println("CANJag in KSpeed");
+                  motorOne.setX(SmartDashboard.getDouble("KSpeed_mode", 0));
+              }
+              else if (conrolMode == 3)
+                  {
+                      motorOne.changeControlMode(CANJaguar.ControlMode.kPosition);
+                      System.out.println("CANJag in KPosition");
+                      motorOne.setX(SmartDashboard.getDouble("KPostion_mode", 0));
+                  }
+              else if (conrolMode == 4)
+              {
+                  motorOne.changeControlMode(CANJaguar.ControlMode.kVoltage);
+                  System.out.println("CANJag in KVoltage");
+                  motorOne.setX(SmartDashboard.getDouble("KVoltage_mode", 0));
+              }    
+                  
+              
+             // motorOne.
+              //Encoder motorOneEncoder = new Encoder
+        } catch (CANTimeoutException ex) {
+            System.out.println("CANJaguar Exception");
+            ex.printStackTrace();
         }
+              }
     }
 }
