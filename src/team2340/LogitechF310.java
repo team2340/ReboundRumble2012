@@ -6,6 +6,7 @@ package team2340;
 
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Watchdog;
+import edu.wpi.first.wpilibj.buttons.Button;
 
 /**
  *
@@ -92,6 +93,14 @@ public class LogitechF310 {
         return new Direction(limit(joystick.getRawAxis(1)),
                 (-1 * limit(joystick.getRawAxis(2))));
     }
+    
+    public double getMag() {
+        return joystick.getMagnitude();
+    }
+    
+    public double getDeg() {
+        return joystick.getDirectionDegrees();
+    }
 
     public Direction getRightStick() {
         return new Direction(limit(joystick.getRawAxis(3)),
@@ -105,6 +114,8 @@ public class LogitechF310 {
         }
         return value;
     }
+    
+    
 
     public void printState() {
         if (getX()) {
@@ -156,5 +167,23 @@ public class LogitechF310 {
         if (rightDir.getX() != 0 || rightDir.getY() != 0) {
             System.out.println("F310 on " + port + " - right stick x=" + rightDir.getX() + ", y=" + rightDir.getY());
         }
+    }
+
+   
+
+    public String getTargetButtons() {
+        String buttonPressed;
+        if (getA())
+            buttonPressed = "A";
+        else if (getB())
+            buttonPressed = "B";
+        else if (getX())
+            buttonPressed = "X";
+        else if (getY())
+            buttonPressed = "Y";
+        else
+            buttonPressed = "NO";
+        return buttonPressed;
+            
     }
 }
