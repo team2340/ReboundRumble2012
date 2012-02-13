@@ -17,6 +17,7 @@ public class LogitechF310 {
     int port;
     Joystick joystick;
     double min = 0.04;
+    private String buttonPressed = "NO";
 
     public LogitechF310(int port) {
         this.port = port;
@@ -172,7 +173,7 @@ public class LogitechF310 {
    
 
     public String getTargetButtons() {
-        String buttonPressed;
+       //buttonPressed = "NO";
         if (getA())
             buttonPressed = "A";
         else if (getB())
@@ -181,8 +182,8 @@ public class LogitechF310 {
             buttonPressed = "X";
         else if (getY())
             buttonPressed = "Y";
-        else
-            buttonPressed = "NO";
+//        else
+//            buttonPressed = "NO";
         return buttonPressed;
             
     }
