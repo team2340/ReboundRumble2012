@@ -7,12 +7,16 @@
 package edu.wpi.first.wpilibj.templates;
 
 import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.buttons.Button;
 import edu.wpi.first.wpilibj.camera.AxisCamera;
 import edu.wpi.first.wpilibj.camera.AxisCameraException;
 import edu.wpi.first.wpilibj.can.CANTimeoutException;
 import edu.wpi.first.wpilibj.image.*;
+import edu.wpi.first.wpilibj.networktables.NetworkListener;
+import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.networktables.NetworkTableKeyNotDefined;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.smartdashboard.*;
+import team2340.Direction;
 import team2340.LogitechF310;
 
 /**
@@ -24,8 +28,12 @@ import team2340.LogitechF310;
  */
 public class Dory extends SimpleRobot {
 
+    public static final String DIFFERENTIAL = "PID: Differential";
+    public static final String INTEGRAL = "PID: Integral";
+    public static final String PROPORTIONAL = "PID: Proportional";
+    public static final String RPM = "Wheel RPM";
     LogitechF310 controller1 = new LogitechF310(1);
-//    LogitechF310 controller2 = new LogitechF310(2);
+    LogitechF310 controller2 = new LogitechF310(2);
 //    LogitechF310 controller3 = new LogitechF310(3);
     CANJaguar leftRearCan;
     CANJaguar rightRearCan;
@@ -37,6 +45,24 @@ public class Dory extends SimpleRobot {
     private double kPos = 0.0;
     private double kVolt = 0.0;
     private RobotDrive drive;
+    private PIDController driveController;
+    private double differential;
+    private double integral;
+    private double proportional;
+    // private ShootingData shootingData;
+    private CANJaguar shooterCan2;
+    private CANJaguar shooterCan1;
+    static int ENCODER_TICKS1 = 360;
+    static int ENCODER_TICKS2 = 250;
+    private double RPMCONSTANT = 990.0;
+    double shootingValue = 0.0;
+    private int wheelRPMs = 0;
+    private AnalogChannel sonarSensor;
+    //private Victor finController = new Victor (10);
+    private CANJaguar finOnJag;
+    boolean finValue =controller1.getLT();
+     
+    
 
     /**
      * This function is called once each time the robot enters autonomous mode.
@@ -48,40 +74,84 @@ public class Dory extends SimpleRobot {
      * This function is called once each time the robot enters operator control.
      */
     public void operatorControl() {
+        
+        
         SetDashboardData();
         try {
-            rightFrontCan = new CANJaguar(6);
-            leftFrontCan = new CANJaguar(5);
-            rightRearCan = new CANJaguar(4);
+            proportional = SmartDashboard.getDouble(PROPORTIONAL);
+            integral = SmartDashboard.getDouble(INTEGRAL);
+            differential = SmartDashboard.getDouble(DIFFERENTIAL);
+        } catch (NetworkTableKeyNotDefined ex) {
+            ex.printStackTrace();
+        }
 
-            leftRearCan = new CANJaguar(3);
-            drive = new RobotDrive(leftFrontCan, leftRearCan, rightFrontCan, rightRearCan);
+
+        try {
+            //sonarSensor = new AnalogChannel(1,3);
+            shooterCan1 = new CANJaguar(7);
+            shooterCan2 = new CANJaguar(8);
+
+            rightFrontCan = initializeCanDriver(5, ENCODER_TICKS1);
+            rightRearCan = initializeCanDriver(3, ENCODER_TICKS1);
+            //leftFrontCan = initializeCanDriver(6, ENCODER_TICKS2);
+            finOnJag = new CANJaguar(6);
+           
+           leftRearCan = initializeCanDriver(4, ENCODER_TICKS2);
+
+
+
+
+
+
+
+
+
         } catch (CANTimeoutException ex) {
             ex.printStackTrace();
         }
 
+        System.out.println( "starting encoder test");  
         while (isEnabled() && isOperatorControl()) {
 
-            DriverTest();
-            /*
-             * System.out.println("while loop \n"); if
-             * (SmartDashboard.getInt("joystick_mode") == 1) {
-             * System.out.println("Joystick Mode : " +
-             * SmartDashboard.getInt("joystick_mode") + " \n"); int motorSel =
-             * SmartDashboard.getInt("joystick_motor"); if (motorSel == 1) {
-             *
-             * JaguarMotorTest(leftRearCan); } else if (motorSel == 2) {
-             * JaguarMotorTest(rightRearCan); } else if (motorSel == 3) {
-             * JaguarMotorTest(leftFrontCan); } else if (motorSel == 4) {
-             * JaguarMotorTest(rightFrontCan); } } else if
-             * (SmartDashboard.getInt("joystick_mode") == 2) {
-             *
-             * }
-             * // double mode = SmartDashboard.getDouble("Comtrol_Mode"); //
-             * System.out.println("mode =" + mode);
-             *
-             */
+            //DriverTest();
+            
+            //EncoderTest(leftFrontCan,leftRearCan, rightFrontCan, rightRearCan);
+           // EncoderTest(rightFrontCan);
+           // EncoderTest(leftRearCan);
+           //EncoderTest(rightRearCan);
+            //ShooterTest();
+            // windowMotorTest();
+            //MeccanumTest();
+            //PIDControllerTest();
+            
+            //double sonarValue = sonarSensor.getVoltage();
+            //System.out.println("sonar sensor reading: " + sonarValue);
+            //sonarValue /= 0.0097; // convert to inches
+            //System.out.println("sonar distance (in): " + sonarValue);
+            try {
+                final double finSpeed = controller1.getRightStick().getX();
+               // if (controller1.getRT()) {
+                     //finController.set(SmartDashboard.getDouble("Fin Voltage"));
+                     //finOnJag.setX(SmartDashboard.getDouble("Fin Voltage"));
+                     
+                    
+                         
+                         finOnJag.setX(finSpeed);
+                         System.out.println("Fin Spreed:" + finSpeed);
+                         
+                         
+                    
+                     
+                     
+                  
+               // }
+            
+            } catch (CANTimeoutException ex) {
+                        ex.printStackTrace();
+            }
+            
         }
+
     }
 
     private void SetDashboardData() {
@@ -97,53 +167,31 @@ public class Dory extends SimpleRobot {
          * SmartDashboard.putInt("Sat High", 255);
          * SmartDashboard.putInt("Intensity Low", 0);
          * SmartDashboard.putInt("Intensity High", 255);
-         */ SmartDashboard.putInt("Control_Mode", 0);
-        SmartDashboard.putDouble("KPercentVbus_mode", 0);
-        SmartDashboard.putDouble("KCurrent_mode", 0);
-        SmartDashboard.putDouble("KSpeed_mode", 0);
-        SmartDashboard.putDouble("KPostion_mode", 0);
-        SmartDashboard.putDouble("KVoltage_mode", 0);
-        SmartDashboard.putInt("joystick_mode", 1);
+         */
+        SmartDashboard.putInt("Control_Mode", 0);
+        /*
+         * SmartDashboard.putDouble("KPercentVbus_mode", 0);
+         * SmartDashboard.putDouble("KCurrent_mode", 0);
+         * SmartDashboard.putDouble("KSpeed_mode", 0);
+         * SmartDashboard.putDouble("KPostion_mode", 0);
+         * SmartDashboard.putDouble("KVoltage_mode", 0);
+         * SmartDashboard.putInt("joystick_mode", 1);
+         */
+        SmartDashboard.putDouble(PROPORTIONAL, proportional);
+
+        SmartDashboard.putDouble(INTEGRAL, integral);
+
+        SmartDashboard.putDouble(DIFFERENTIAL, differential);
+        SmartDashboard.putInt(RPM, wheelRPMs);
         SmartDashboard.putInt("joystick_motor", 1);
+        SmartDashboard.putDouble("Shooter Input", 0.0);
+        SmartDashboard.putDouble("Fin Voltage", 0.09);
+        
+
     }
 
     private void JaguarMotorTest(CANJaguar selectedMotor) {
-        /*
-         * if(camera.freshImage()) { try { ColorImage color = camera.getImage();
-         * int hueLow = SmartDashboard.getInt("Hue Low", 0); int hueHigh =
-         * SmartDashboard.getInt("Hue High", 255); int satLow =
-         * SmartDashboard.getInt("Sat Low", 0); int satHigh =
-         * SmartDashboard.getInt("Sat High", 255); int intensityLow =
-         * SmartDashboard.getInt("Intensity Low", 0); int intensityHigh =
-         * SmartDashboard.getInt("Intensity High", 255);
-         * System.out.println(hueLow+ ", " +hueHigh+ ", " +satLow+ ", "
-         * +satHigh+ ", " +intensityLow+ "," +intensityHigh); BinaryImage binary
-         * = color.thresholdHSI(hueLow, hueHigh, satLow, satHigh, intensityLow,
-         * intensityHigh); color.free(); BinaryImage hulled =
-         * binary.convexHull(true); binary.free(); CriteriaCollection cc = new
-         * CriteriaCollection();
-         * cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_AREA_BY_IMAGE_AREA,
-         * 6.0f, 7.0f, true);
-         * cc.addCriteria(NIVision.MeasurementType.IMAQ_MT_RATIO_OF_EQUIVALENT_RECT_SIDES,
-         * 0f, 1.1f, true); BinaryImage filtered = hulled.particleFilter(cc);
-         * hulled.free(); ParticleAnalysisReport[] reports =
-         * filtered.getOrderedParticleAnalysisReports(); filtered.free(); float
-         * idealRatio = 24.0f / 18.0f;
-         *
-         * System.out.println("found " + reports.length + " shapes"); for(int i
-         * = 0; i < reports.length; ++i) { ParticleAnalysisReport report =
-         * reports[i]; float width = report.boundingRectWidth; float height =
-         * report.boundingRectHeight; float ratio = width / height;
-         * System.out.println("ratio = " + ratio); if(((ratio < (idealRatio +
-         * 0.2)) && (ratio > (idealRatio - 0.2)))) { double fovFT = (2.0 /
-         * width) / xRes; double distFromTarget = (fovFT / 2.0) /
-         * Math.tan(fovAngleInRad); System.out.println("dist from target = " +
-         * distFromTarget); } }
-         *
-         *
-         * } catch (AxisCameraException ex) { ex.printStackTrace(); } catch
-         * (NIVisionException ex) { ex.printStackTrace(); } } }
-         */
+
         try {
 
 
@@ -152,9 +200,7 @@ public class Dory extends SimpleRobot {
             System.out.println("Control Mode: " + conrolMode + "\n");
             if (conrolMode == 0) {
                 selectedMotor.changeControlMode(CANJaguar.ControlMode.kPercentVbus);
-                //if (vBus != SmartDashboard.getDouble("KPercentVbus_mode", 0)) {
 
-                //}
                 vBus = SmartDashboard.getDouble("KPercentVbus_mode", 0);
                 System.out.println("CANJag in KPercentVBus: " + vBus);
                 selectedMotor.setX(vBus);
@@ -207,21 +253,55 @@ public class Dory extends SimpleRobot {
         }
     }
 
+    private void MeccanumTest() {
+        try {
+            double rotation = 0.0;
+            if (controller1.getRB()) {
+                rotation = -1.0;
+            } else if (controller1.getLB()) {
+                rotation = 1.0;
+            } else {
+                rotation = 0.0;
+            }
+            SmartDashboard.putDouble("Mag", controller1.getMag());
+            SmartDashboard.putDouble("Deg", controller1.getDeg());
+            SmartDashboard.putDouble("rotation", rotation);
+            drive.mecanumDrive_Polar(controller1.getMag(), controller1.getDeg(), rotation);
+
+        } catch (Exception e) {
+            System.out.println("MeccanumTest Exception");
+            System.out.println(e);
+        }
+    }
+
     private void DriverTest() {
-        //System.out.println("in TankDrive mode");
+
         controller1.printState();
         try {
-            double yValue = controller1.getLeftStick().getY();
-            double xValue = controller1.getLeftStick().getX();
+            double yValue = controller1.getRightStick().getY();
+            double xValue = controller1.getRightStick().getX();
 
+
+            double[] values = RangeCheck(xValue, yValue);
+            xValue = values[0];
+            yValue = values[1];
             double mag = Math.sqrt(yValue * yValue + xValue * xValue);
+            //proportional = SmartDashboard.get
+
+            SmartDashboard.putDouble("Driving xValue", xValue);
+
+            SmartDashboard.putDouble("Driving yValue", yValue);
+
             if (yValue > 0 && xValue == 0) {
                 // Forward
-                Watchdog.getInstance().feed();
+
                 rightFrontCan.setX(yValue);
+                rightFrontCan.setPID(proportional, integral, differential);
+                // rightFrontCan.
                 leftFrontCan.setX(-1 * yValue);
                 rightRearCan.setX(yValue);
                 leftRearCan.setX(-1 * yValue);
+                Timer.delay(0.25);
 
             } else if (yValue > 0 && xValue > 0) {
                 // 45 diagional front right
@@ -230,104 +310,263 @@ public class Dory extends SimpleRobot {
                 leftFrontCan.setX(mag * -1);
                 rightRearCan.setX(mag);
                 leftRearCan.setX(0);
+                Timer.delay(0.25);
 
             } else if (yValue == 0 && xValue > 0) {
-                // Right
-                Watchdog.getInstance().feed();
+
                 rightFrontCan.setX(xValue * -1);
                 leftFrontCan.setX(-1 * xValue);
                 rightRearCan.setX(xValue);
                 leftRearCan.setX(xValue);
+                Timer.delay(0.25);
 
             } else if (yValue < 0 && xValue > 0) {
-                Watchdog.getInstance().feed();
-
 
                 rightFrontCan.setX(mag);
                 leftFrontCan.setX(0);
                 rightRearCan.setX(0);
                 leftRearCan.setX(mag * -1);
+                Timer.delay(0.25);
 
             } else if (yValue < 0 && xValue == 0) {
-                Watchdog.getInstance().feed();
 
 
                 rightFrontCan.setX(yValue);
                 leftFrontCan.setX(yValue * -1);
                 rightRearCan.setX(yValue);
                 leftRearCan.setX(yValue * -1);
+                Timer.delay(0.25);
 
             } else if (yValue < 0 && xValue < 0) {
-                Watchdog.getInstance().feed();
+
 
 
                 rightFrontCan.setX(0);
                 leftFrontCan.setX(mag * -1);
                 rightRearCan.setX(mag);
                 leftRearCan.setX(0);
+                Timer.delay(0.25);
 
             } else if (yValue == 0 && xValue < 0) {
-                Watchdog.getInstance().feed();
+
 
 
                 rightFrontCan.setX(xValue * -1);
                 leftFrontCan.setX(xValue * -1);
                 rightRearCan.setX(xValue);
                 leftRearCan.setX(xValue);
+                Timer.delay(0.25);
 
             } else if (xValue < 0 && yValue > 0) {
-                Watchdog.getInstance().feed();
+
 
 
                 rightFrontCan.setX(mag * -1);
                 leftFrontCan.setX(0);
                 rightRearCan.setX(0);
                 leftRearCan.setX(mag);
+                Timer.delay(0.25);
 
             } else if (controller1.getDPad().getX() > 0) {
-                Watchdog.getInstance().feed();
+
                 rightFrontCan.setX(-1);
                 leftFrontCan.setX(-1);
                 rightRearCan.setX(-1);
                 leftRearCan.setX(-1);
+                Timer.delay(0.25);
 
 
             } else if (controller1.getDPad().getX() < 0) {
-                Watchdog.getInstance().feed();
+
                 rightFrontCan.setX(1);
                 leftFrontCan.setX(1);
                 rightRearCan.setX(1);
                 leftRearCan.setX(1);
+                Timer.delay(0.25);
 
 
             } else {
-                Watchdog.getInstance().feed();
 
 
-                System.out.println("STOP !!");
+
+                //   System.out.println("STOP !!");
 
                 rightFrontCan.setX(0);
                 leftFrontCan.setX(0);
                 rightRearCan.setX(0);
                 leftRearCan.setX(0);
+                Timer.delay(0.25);
 
             }
 
 
+            if (controller1.getRB()) {
+
+                rightFrontCan.configNeutralMode(CANJaguar.NeutralMode.kBrake);
+                leftFrontCan.configNeutralMode(CANJaguar.NeutralMode.kBrake);
+                rightRearCan.configNeutralMode(CANJaguar.NeutralMode.kBrake);
+                leftRearCan.configNeutralMode(CANJaguar.NeutralMode.kBrake);
+            } else {
+                rightFrontCan.configNeutralMode(CANJaguar.NeutralMode.kCoast);
+                leftFrontCan.configNeutralMode(CANJaguar.NeutralMode.kCoast);
+                rightRearCan.configNeutralMode(CANJaguar.NeutralMode.kCoast);
+                leftRearCan.configNeutralMode(CANJaguar.NeutralMode.kCoast);
+
+            }
 
         } catch (Exception e) {
         }
 
-        Watchdog.getInstance().feed();
-
-
-        Watchdog.getInstance().feed();
-        //drive.tankDrive(controller1.getLeftStick().getY(), controller1.getRightStick().getY());
-        //drive.mecanumDrive_Cartesian(controller1.getLeftStick().getY(), controller1.getRightStick().getY(), 0, 0);
-
-        Watchdog.getInstance().feed();
 
 
 
+
+    }
+
+    private void ShooterTest() {
+
+        try {
+            //double smartDashboardShooterValue = controller1.getRightStick().getX();
+            if (controller1.getDPad().getY() > 0) {
+                shootingValue += .01;
+            } else if (controller1.getDPad().getY() < 0) {
+
+                shootingValue -= .01;
+            }
+            if (controller1.getLB()) {
+                shootingValue = 0.0;
+            }
+
+            //     if (smartDashboardShooterValue > 0) {
+//                SmartDashboard.putDouble("Shooter Value", smartDashboardShooterValue);
+            //SmartDashboard.putString("Shooter Target", controller1.getTargetButtons());
+
+            if (shootingValue > 1.0) {
+                shootingValue = 1.0;
+            } else if (shootingValue < -1.0) {
+                shootingValue = -1.0;
+            }
+            System.out.println("Shooter Value: " + shootingValue);
+
+            shooterCan1.setX(-1 * shootingValue);
+            shooterCan2.setX(shootingValue);
+            //  Timer.delay(.25);
+
+            //   }
+        } catch (Exception ex) {
+
+            ex.printStackTrace();
+        }
+
+    }
+
+    private void windowMotorTest() {
+        try {
+            if (controller1.getA()) {
+                rightRearCan.setX(0.25);
+            }
+            if (controller1.getB()) {
+                rightRearCan.setX(-0.25);
+            }
+        } catch (Exception e) {
+            System.out.println("window test motor exception");
+            e.printStackTrace();
+        }
+    }
+
+    private void PIDControllerTest() {
+    }
+
+    private double[] RangeCheck(double xValue, double yValue) {
+
+
+        double[] listValues = new double[2];
+        if (xValue == 0.0) {
+
+            double noSlope = Math.tan(75.0);
+            double zeroSlope = Math.tan(15.0);
+
+            double calculatedSlope = (yValue / xValue);
+
+            if (Math.abs(calculatedSlope) > noSlope) {
+                listValues[0] = 0.0;
+                listValues[1] = yValue;
+            } else if (Math.abs(yValue / xValue) < zeroSlope) {
+                listValues[0] = xValue;
+                listValues[1] = 0.0;
+            }
+
+
+        } else {
+            listValues[0] = xValue;
+            listValues[1] = yValue;
+        }
+        return listValues;
+    }
+
+    private void EncoderTest(CANJaguar leftFrontCan1, CANJaguar leftRearCan1, CANJaguar rightFrontCan1, CANJaguar rightRearCan1) {
+        double yValue = controller1.getRightStick().getY();
+        double xValue = controller1.getRightStick().getX();
+        // controller1.printState();
+        try {
+
+            
+            
+            double newP = SmartDashboard.getDouble(PROPORTIONAL);
+            double newI = SmartDashboard.getDouble(INTEGRAL);
+            double newD = SmartDashboard.getDouble(DIFFERENTIAL);
+            int newRPM = SmartDashboard.getInt(RPM);
+
+            if (newP != proportional || newI != integral || newD != differential || newRPM != wheelRPMs) {
+                System.out.println("Got a new PID");
+                leftFrontCan1.setPID(newP, newI, newD);
+                rightFrontCan1.setPID(newP, newI, newD);
+                leftRearCan1.setPID(newP, newI, newD);
+                rightRearCan1.setPID(newP, newI, newD);
+                proportional = newP;
+                integral = newI;
+                differential = newD;
+                wheelRPMs = newRPM;
+                System.out.println("P: " + newP + " I: " + newI + " D: " + newD + " W: " + wheelRPMs);
+            }
+           
+            leftFrontCan1.setX(wheelRPMs);
+            rightFrontCan1.setX(wheelRPMs);
+            leftRearCan1.setX(wheelRPMs);
+            rightRearCan1.setX(wheelRPMs);
+            System.out.println("FR: " + rightFrontCan1.getPosition() +
+                    " BR:" + rightRearCan1.getPosition() +
+                    " FL:" + leftFrontCan1.getPosition() + 
+                    " BL:" + leftRearCan1.getPosition());
+       
+            Timer.delay(.02);
+
+
+        } catch (NetworkTableKeyNotDefined ex) {
+            ex.printStackTrace();
+        } catch (CANTimeoutException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private CANJaguar initializeCanDriver(int canLocation, int encoderValue) {
+        CANJaguar driveCan = null;
+        try {
+             driveCan = new CANJaguar(canLocation, CANJaguar.ControlMode.kSpeed);
+
+            driveCan.configEncoderCodesPerRev(encoderValue);
+            driveCan.setPID(proportional, integral, differential);
+            //  driveCan.enableControl();
+            driveCan.setSpeedReference(CANJaguar.SpeedReference.kEncoder);
+            driveCan.changeControlMode(CANJaguar.ControlMode.kSpeed);
+            driveCan.setPositionReference(CANJaguar.PositionReference.kQuadEncoder);
+            driveCan.enableControl();
+            driveCan.configNeutralMode(CANJaguar.NeutralMode.kCoast);
+           
+            
+        } catch (CANTimeoutException ex) {
+            ex.printStackTrace();
+        }
+        return driveCan;
     }
 }
